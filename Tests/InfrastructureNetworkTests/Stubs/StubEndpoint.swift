@@ -1,17 +1,15 @@
 @testable import InfrastructureNetwork
+import InfrastructureNetworkAPI
 
-enum StubEndpoint: Endpoint
-{
+enum StubEndpoint: Endpoint {
     case invalidURLEndpoint
     case getEndpoint
     case postEndpoint
     case queryParametersEndpoint([String: String?])
     case encodableBodyEndpoint(StubRequest)
     
-    var baseURL: String
-    {
-        switch self
-        {
+    var baseURL: String {
+        switch self {
             case .invalidURLEndpoint:
                 "invalidscheme://malformed com"
                 
@@ -20,13 +18,11 @@ enum StubEndpoint: Endpoint
         }
     }
     
-    var path: String
-    {
+    var path: String {
         "/path/to/endpoint"
     }
     
-    var headers: [String : String]?
-    {
+    var headers: [String : String]? {
         [
             "key1": "value1",
             "key2": "value2",
@@ -34,10 +30,8 @@ enum StubEndpoint: Endpoint
         ]
     }
     
-    var method: HTTPMethod
-    {
-        switch self
-        {
+    var method: HTTPMethod {
+        switch self {
             case .postEndpoint:
                     .post
                 
@@ -46,10 +40,8 @@ enum StubEndpoint: Endpoint
         }
     }
     
-    var body: RequestBody
-    {
-        switch self
-        {
+    var body: RequestBody {
+        switch self {
             case .getEndpoint, .postEndpoint, .invalidURLEndpoint:
                     .plain
                 

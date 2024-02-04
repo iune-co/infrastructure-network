@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "InfrastructureNetwork",
     platforms: [
-        .iOS(.v16),
+        .iOS(.v15),
         .macOS(.v12),
         .watchOS(.v8),
         .tvOS(.v15)
@@ -15,6 +15,12 @@ let package = Package(
             name: "InfrastructureNetwork",
             targets: [
                 "InfrastructureNetwork"
+            ]
+        ),
+        .library(
+            name: "InfrastructureNetworkAPI",
+            targets: [
+                "InfrastructureNetworkAPI"
             ]
         ),
     ],
@@ -28,10 +34,16 @@ let package = Package(
         .target(
             name: "InfrastructureNetwork",
             dependencies: [
+				"InfrastructureNetworkAPI",
                 .product(
                     name: "InfrastructureDependencyContainer",
                     package: "infrastructure-dependency-container"
                 )
+            ]
+        ),
+        .target(
+            name: "InfrastructureNetworkAPI",
+            dependencies: [
             ]
         ),
         .testTarget(

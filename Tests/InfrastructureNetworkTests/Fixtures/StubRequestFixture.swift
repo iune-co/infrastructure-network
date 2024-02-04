@@ -1,5 +1,4 @@
-extension StubRequest
-{
+extension StubRequest {
     static func fixture(
         encodableVar1: String = "encodableVar1Value",
         encodableVar2: Int = 1

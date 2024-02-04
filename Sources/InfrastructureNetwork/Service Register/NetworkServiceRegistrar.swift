@@ -1,15 +1,11 @@
 import Foundation
 import InfrastructureDependencyContainer
+import InfrastructureNetworkAPI
 
-public struct NetworkServiceRegister: ServiceRegister 
-{
-    public init() 
-    {
-        
-    }
+public struct NetworkServiceRegistrar: ServiceRegister {
+    public init() {}
     
-    public func register(on container: DependencyContainer) 
-    {
+    public func register(on container: DependencyContainer){
         container.register(service: NetworkProvider.self) {
             NetworkProviderImplementation(
                 logger: NetworkLoggerImplementation(),

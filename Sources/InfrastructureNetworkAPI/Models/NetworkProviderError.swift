@@ -1,5 +1,4 @@
-public enum NetworkProviderError: Error 
-{
+public enum NetworkProviderError: Error {
     case unauthorized
     case invalidRequest
     case notFound

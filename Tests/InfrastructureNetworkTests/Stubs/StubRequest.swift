@@ -1,5 +1,4 @@
-struct StubRequest: Codable, Equatable
-{
+struct StubRequest: Codable, Equatable {
     let encodableVar1: String
     let encodableVar2: Int
     

@@ -1,7 +1,6 @@
 import Foundation
 
-public enum RequestBody
-{
+public enum RequestBody {
     case plain
     case encodable(Encodable)
     case queryParameter([String: String?])

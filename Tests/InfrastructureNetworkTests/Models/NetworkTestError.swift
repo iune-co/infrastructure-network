@@ -1,4 +1,3 @@
-enum NetworkTestError: Error
-{
+enum NetworkTestError: Error {
     case someError
 }

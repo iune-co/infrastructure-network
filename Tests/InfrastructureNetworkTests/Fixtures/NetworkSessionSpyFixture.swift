@@ -1,7 +1,6 @@
 import Foundation
 
-extension NetworkSessionSpy
-{
+extension NetworkSessionSpy {
     static func fixture(
         errorToThrow: Error? = nil,
         dataToReturn: Data? = StubInstance1.jsonDataFixture(),

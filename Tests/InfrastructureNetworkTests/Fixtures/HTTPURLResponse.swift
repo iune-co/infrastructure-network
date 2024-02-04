@@ -1,7 +1,6 @@
 import Foundation
 
-extension HTTPURLResponse
-{
+extension HTTPURLResponse {
     static func fixture(
         url: URL = URL(string: StubEndpoint.getEndpoint.baseURL)!,
         statusCode: Int = 200,

@@ -1,8 +1,8 @@
 @testable import InfrastructureNetwork
 import Foundation
+import InfrastructureNetworkAPI
 
-final class NetworkSessionSpy: NetworkSession
-{
+final class NetworkSessionSpy: NetworkSession {
     var errorToThrow: Error?
     var dataToReturn: Data?
     var urlResponseToReturn: URLResponse?
@@ -19,21 +19,18 @@ final class NetworkSessionSpy: NetworkSession
         self.urlResponseToReturn = urlResponseToReturn
     }
     
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
-    {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
         receivedURLRequest = request
         dataForRequestMethodWasCalledXTimes += 1
         
-        if let errorToThrow
-        {
+        if let errorToThrow {
             throw errorToThrow
         }
         
         guard
             let dataToReturn,
             let urlResponseToReturn
-        else
-        {
+        else {
             fatalError("NetworkSessionSpy must return Data and URLResponse if no errors are thrown.")
         }
         
