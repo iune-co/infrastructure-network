@@ -1,18 +1,14 @@
-public struct HTTPHeader
-{
-    private init()
-    {
-        
-    }
-    
-    public struct Key
-    {
-        static var contentType = "Content-Type"
-        static var authorization = "Authorization"
-    }
-    
-    public struct Value
-    {
-        static var applicationJSON = "application/json"
-    }
+public struct HTTPHeader {
+        private init() {
+
+        }
+
+        public struct Key {
+                static let contentType = "Content-Type"
+                static let authorization = "Authorization"
+        }
+
+        public struct Value {
+                static let applicationJSON = "application/json"
+        }
 }

@@ -1,0 +1,12 @@
+{
+    "lineLength": 180,
+    "indentation": {
+        "spaces": 8
+    },
+    "maximumBlankLines": 2,
+    "lineBreakBeforeEachArgument": true,
+    "lineBreakBeforeEachGenericRequirement": true,
+    "lineBreakBetweenDeclarationAttributes": true,
+    "prioritizeKeepingFunctionOutputTogether": true,
+    "indentSwitchCaseLabels": true
+}
