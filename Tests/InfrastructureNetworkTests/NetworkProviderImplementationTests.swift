@@ -11,7 +11,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance2 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.parsingError, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.parsingError.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -19,7 +19,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.parsingError
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.parsingError, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.parsingError.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -31,7 +31,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.noNetworkConnection, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.noNetworkConnection.testDescription), got success instead.")
                 } catch let error as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -39,7 +39,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.noNetworkConnection
                         )
                 } catch let error {
-                        XCTFail("Expected NetworkError.noNetworkConnection, got \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.noNetworkConnection.testDescription), got \(error) instead.")
                 }
         }
 
@@ -52,7 +52,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkTestError.someError, got success instead.")
+                        XCTFail("Expected \(NetworkTestError.someError.testDescription), got success instead.")
                 } catch let error as NetworkTestError {
                         // Then
                         XCTAssertEqual(
@@ -60,7 +60,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 expectedError
                         )
                 } catch let error {
-                        XCTFail("Expected NetworkTestError.someError, got \(error) instead.")
+                        XCTFail("Expected \(NetworkTestError.someError.testDescription), got \(error) instead.")
                 }
         }
 
@@ -75,7 +75,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.other, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.other.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -83,7 +83,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.other
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.other, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.other.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -98,7 +98,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.nonHTTResponse, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.nonHTTResponse.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -106,7 +106,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.nonHTTResponse
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.nonHTTResponse, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.nonHTTResponse.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -118,7 +118,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.unauthorized, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.unauthorized.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -126,7 +126,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.unauthorized
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.unauthorized, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.unauthorized.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -138,7 +138,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.notFound, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.notFound.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -146,7 +146,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.notFound
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.notFound, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.notFound.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -158,7 +158,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.timeout, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.timeout.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -166,7 +166,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.timeout
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.timeout, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.timeout.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -178,7 +178,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.invalidRequest, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.invalidRequest.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -186,7 +186,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.invalidRequest
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.invalidRequest, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.invalidRequest.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -198,7 +198,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.serverError, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.serverError.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -206,7 +206,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.serverError
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.serverError, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.serverError.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -218,7 +218,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected NetworkError.noData, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.noData.testDescription), got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -226,7 +226,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.noData
                         )
                 } catch {
-                        XCTFail("Expected NetworkError.noData, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.noData.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -237,7 +237,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.invalidURLEndpoint)
-                        XCTFail("Expected NetworkError.invalidURL thrown, got success instead.")
+                        XCTFail("Expected \(NetworkProviderError.invalidURL.testDescription) thrown, got success instead.")
                 } catch let errorThrown as NetworkProviderError {
                         // Then
                         XCTAssertEqual(
@@ -245,7 +245,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 NetworkProviderError.invalidURL
                         )
                 } catch let error {
-                        XCTFail("Expected NetworkError.invalidURL, got error \(error) instead.")
+                        XCTFail("Expected \(NetworkProviderError.invalidURL.testDescription), got error \(error) instead.")
                 }
         }
 
@@ -317,9 +317,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                                 encodableRequest
                                         )
                                 } else {
-                                        XCTFail(
-                                                "Failed to decode HTTPBody into ValidEncodableRequest."
-                                        )
+                                        XCTFail("Failed to decode HTTPBody into ValidEncodableRequest.")
                                 }
                         } else {
                                 XCTFail("Expected HTTPBody, got nil instead.")
@@ -344,8 +342,7 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         "float": "1.0",
                         "parameterWithNoValue": nil,
                 ]
-                let expectedQueryParameters =
-                        queryParameters
+                let expectedQueryParameters = queryParameters
                         .map(URLQueryItem.init)
                         .sorted(by: queryItemSorting)
                 let networkSessionSpy = NetworkSessionSpy.fixture()
