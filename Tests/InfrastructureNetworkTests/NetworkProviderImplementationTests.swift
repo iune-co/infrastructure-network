@@ -342,7 +342,8 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         "float": "1.0",
                         "parameterWithNoValue": nil,
                 ]
-                let expectedQueryParameters = queryParameters
+                let expectedQueryParameters =
+                        queryParameters
                         .map(URLQueryItem.init)
                         .sorted(by: queryItemSorting)
                 let networkSessionSpy = NetworkSessionSpy.fixture()
