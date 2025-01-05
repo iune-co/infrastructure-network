@@ -11,13 +11,19 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - name: Check out
         uses: actions/checkout@v4
 
-      - name: Use Xcode 15.1
-        run: sudo xcode-select --switch /Applications/Xcode_15.1.app
+      - name: Use Xcode 16.2
+        run: sudo xcode-select --switch /Applications/Xcode_16.2.app
+
+      - name: Run linter
+        run: |
+          swift format --recursive --in-place .
+          git diff --exit-code
+        shell: bash
 
       - name: Build and test
         run: |

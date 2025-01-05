@@ -1,131 +1,121 @@
 import Foundation
 import os.log
 
-public final class NetworkLoggerImplementation: NetworkLogger
-{
-    private let headingDash = "=========="
-    private let logger = Logger(
-        subsystem: "co.iune.infrastructure.network",
-        category: "NetworkLogging"
-    )
-    
-    private func getJSONString(from data: Data?) throws -> String
-    {
-        guard let data = data else
-        {
-            throw NSError(
-                domain: "DataError",
-                code: 0,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Data is nil"
-                ]
-            )
-        }
-        
-        let jsonObject = try JSONSerialization.jsonObject(
-            with: data,
-            options: []
+public final class NetworkLoggerImplementation: NetworkLogger {
+        private let headingDash = "=========="
+        private let logger = Logger(
+                subsystem: "co.iune.infrastructure.network",
+                category: "NetworkLogging"
         )
-        
-        let prettyData = try JSONSerialization.data(
-            withJSONObject: jsonObject,
-            options: .prettyPrinted
-        )
-        
-        if
-            let prettyString = String(
-                data: prettyData,
-                encoding: .utf8
-            )
-        {
-            return prettyString
-                .split(separator: "\n")
-                .map{ "\t\($0)" }
-                .joined(separator: "\n")
+
+        private func getJSONString(from data: Data?) throws -> String {
+                guard let data = data else {
+                        throw NSError(
+                                domain: "DataError",
+                                code: 0,
+                                userInfo: [
+                                        NSLocalizedDescriptionKey: "Data is nil"
+                                ]
+                        )
+                }
+
+                let jsonObject = try JSONSerialization.jsonObject(
+                        with: data,
+                        options: []
+                )
+
+                let prettyData = try JSONSerialization.data(
+                        withJSONObject: jsonObject,
+                        options: .prettyPrinted
+                )
+
+                if let prettyString = String(
+                        data: prettyData,
+                        encoding: .utf8
+                ) {
+                        return
+                                prettyString
+                                .split(separator: "\n")
+                                .map { "\t\($0)" }
+                                .joined(separator: "\n")
+                } else {
+                        throw NSError(
+                                domain: "StringError",
+                                code: 1,
+                                userInfo: [
+                                        NSLocalizedDescriptionKey: "Couldn't create string from data"
+                                ]
+                        )
+                }
         }
-        else
-        {
-            throw NSError(
-                domain: "StringError",
-                code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: "Couldn't create string from data"
-                ]
-            )
+
+        public func log(request: URLRequest) {
+                #if DEBUG
+                        let httpMethod = request.httpMethod ?? "HTTP Method not specified"
+                        let path = request.url?.absoluteString ?? "Path not specified"
+                        let headers = request.allHTTPHeaderFields ?? [:]
+                        let bodyData = request.httpBody
+
+                        logger.debug(
+                                "\(self.headingDash) BEGIN NETWORK REQUEST \(self.headingDash)"
+                        )
+                        logger.debug("Method: \(httpMethod)")
+                        logger.debug("Path: \(path)")
+                        logger.debug("Headers:")
+                        for (key, value) in headers {
+                                logger.debug("\t\(key): \(value)")
+                        }
+
+                        logger.debug("Body:")
+                        do {
+                                let bodyString = try getJSONString(from: bodyData)
+                                logger.debug("\(bodyString)")
+                        } catch {
+                                logger.debug("\tRequest without body or error showing body")
+                        }
+
+                        logger.debug("\(self.headingDash) END NETWORK REQUEST \(self.headingDash)")
+                #endif
         }
-    }
-    
-    public func log(request: URLRequest)
-    {
-        #if DEBUG
-        let httpMethod = request.httpMethod ?? "HTTP Method not specified"
-        let path = request.url?.absoluteString ?? "Path not specified"
-        let headers = request.allHTTPHeaderFields ?? [:]
-        let bodyData = request.httpBody
-        
-        logger.debug("\(self.headingDash) BEGIN NETWORK REQUEST \(self.headingDash)")
-        logger.debug("Method: \(httpMethod)")
-        logger.debug("Path: \(path)")
-        logger.debug("Headers:")
-        for (key, value) in headers
-        {
-            logger.debug("\t\(key): \(value)")
+
+        public func log(
+                response: URLResponse,
+                data: Data?
+        ) {
+                #if DEBUG
+                        guard let response = response as? HTTPURLResponse else { return }
+                        let path = response.url?.absoluteString ?? "Not specified"
+                        let headers = response.allHeaderFields
+
+                        logger.debug(
+                                "\(self.headingDash) BEGIN NETWORK RESPONSE \(self.headingDash)"
+                        )
+                        logger.debug("Path: \(path)")
+                        logger.debug("Status code: \(response.statusCode)")
+                        logger.debug("Headers:")
+                        for (key, value) in headers {
+                                logger.debug(
+                                        "\t\(String(describing: key)): \(String(describing: value))"
+                                )
+                        }
+
+                        logger.debug("Body:")
+                        do {
+                                let bodyString = try getJSONString(from: data)
+                                logger.debug("\(bodyString)")
+                        } catch {
+                                logger.debug("\tResponse without body or error showing body")
+                        }
+
+                        logger.debug("\(self.headingDash) END NETWORK RESPONSE \(self.headingDash)")
+                #endif
         }
-        
-        logger.debug("Body:")
-        do
-        {
-            let bodyString = try getJSONString(from: bodyData)
-            logger.debug("\(bodyString)")
+
+        public func log(error: Error) {
+                #if DEBUG
+                        logger.debug("\(self.headingDash) ERROR \(self.headingDash)")
+                        logger.debug("\(error.localizedDescription)")
+                        logger.debug("\n")
+                #endif
         }
-        catch
-        {
-            logger.debug("\tRequest without body or error showing body")
-        }
-        
-        logger.debug("\(self.headingDash) END NETWORK REQUEST \(self.headingDash)")
-        #endif
-    }
-    
-    public func log(
-        response: URLResponse,
-        data: Data?
-    ) {
-        #if DEBUG
-        guard let response = response as? HTTPURLResponse else { return }
-        let path = response.url?.absoluteString ?? "Not specified"
-        let headers = response.allHeaderFields
-        
-        logger.debug("\(self.headingDash) BEGIN NETWORK RESPONSE \(self.headingDash)")
-        logger.debug("Path: \(path)")
-        logger.debug("Status code: \(response.statusCode)")
-        logger.debug("Headers:")
-        for (key, value) in headers
-        {
-            logger.debug("\t\(String(describing: key)): \(String(describing: value))")
-        }
-        
-        logger.debug("Body:")
-        do
-        {
-            let bodyString = try getJSONString(from: data)
-            logger.debug("\(bodyString)")
-        }
-        catch
-        {
-            logger.debug("\tResponse without body or error showing body")
-        }
-        
-        logger.debug("\(self.headingDash) END NETWORK RESPONSE \(self.headingDash)")
-        #endif
-    }
-    
-    public func log(error: Error)
-    {
-        #if DEBUG
-        logger.debug("\(self.headingDash) ERROR \(self.headingDash)")
-        logger.debug("\(error.localizedDescription)")
-        logger.debug("\n")
-        #endif
-    }
 }
