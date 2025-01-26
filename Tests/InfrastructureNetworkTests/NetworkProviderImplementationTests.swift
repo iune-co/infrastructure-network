@@ -1,29 +1,59 @@
-import XCTest
+import Foundation
+import Testing
 
 @testable import InfrastructureNetwork
 
-final class NetworkProviderImplementationTests: XCTestCase {
-        // MARK: - Test cases
-        func test_whenDecodingFails_networkProviderThrowsNetworkErrorParsingError() async {
+@Suite("NetworkProviderImplementation Error Handling")
+struct NetworkProviderImplementationErrorHandlingTests {
+        @Test(
+                "When network session throws HTTPURLResponse with status code, repository maps to expected error",
+                arguments: [
+                        (HTTPURLResponse.fixture(statusCode: 403), NetworkProviderError.unauthorized),
+                        (HTTPURLResponse.fixture(statusCode: 404), NetworkProviderError.notFound),
+                        (HTTPURLResponse.fixture(statusCode: 408), NetworkProviderError.timeout),
+                        (HTTPURLResponse.fixture(statusCode: 499), NetworkProviderError.invalidRequest),
+                        (HTTPURLResponse.fixture(statusCode: 599), NetworkProviderError.serverError),
+                        (HTTPURLResponse.fixture(statusCode: 1000), NetworkProviderError.other),
+                ]
+        )
+        func testErrorMapping(
+                returnURLResponse: HTTPURLResponse,
+                expectedError: NetworkProviderError
+        ) async {
+                // Given
+                let networkSessionSpy = NetworkSessionSpy(
+                        dataToReturn: Data(),
+                        urlResponseToReturn: returnURLResponse
+                )
+                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
+
+                do {
+                        // When
+                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
+                        Issue.record("Expected \(expectedError.testDescription), got success instead.")
+                } catch {
+                        // Then
+                        #expect(error == expectedError)
+                }
+        }
+
+        @Test("When decoding fails, network provider throws parsing error")
+        func testFailDecoding() async {
                 // Given
                 let sut = NetworkProviderImplementation(networkSession: NetworkSessionSpy.fixture())
 
                 do {
                         // When
                         let _: StubInstance2 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.parsingError.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.parsingError
-                        )
+                        Issue.record("Expected \(NetworkProviderError.parsingError.testDescription), got success instead.")
                 } catch {
-                        XCTFail("Expected \(NetworkProviderError.parsingError.testDescription), got error \(error) instead.")
+                        // Then
+                        #expect(error == NetworkProviderError.parsingError)
                 }
         }
 
-        func test_whenNetworkSessionThrowsNotConnectedToInternet_networkProviderThrowsNoNetworkConnection() async {
+        @Test("When network sessions throws not connected to internet, network provider throws no network connection")
+        func testNoNetworkConnection() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy(errorToThrow: URLError(.notConnectedToInternet))
                 let networkProvider = NetworkProviderImplementation(networkSession: networkSessionSpy)
@@ -31,63 +61,32 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.noNetworkConnection.testDescription), got success instead.")
-                } catch let error as NetworkProviderError {
+                        Issue.record("Expected \(NetworkProviderError.noNetworkConnection.testDescription), got success instead.")
+                } catch {
                         // Then
-                        XCTAssertEqual(
-                                error,
-                                NetworkProviderError.noNetworkConnection
-                        )
-                } catch let error {
-                        XCTFail("Expected \(NetworkProviderError.noNetworkConnection.testDescription), got \(error) instead.")
+                        #expect(error == NetworkProviderError.noNetworkConnection)
                 }
         }
 
-        func test_whenNetworkSessionThrowsNonHandledError_networkProviderThrowsSameError() async {
+        @Test("When network sesions throws other error, network provider throws same error")
+        func testOtherError() async {
                 // Given
-                let expectedError = NetworkTestError.someError
+                let expectedError = NetworkProviderError.other
                 let networkSessionSpy = NetworkSessionSpy(errorToThrow: expectedError)
                 let networkProvider = NetworkProviderImplementation(networkSession: networkSessionSpy)
 
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkTestError.someError.testDescription), got success instead.")
-                } catch let error as NetworkTestError {
-                        // Then
-                        XCTAssertEqual(
-                                error,
-                                expectedError
-                        )
-                } catch let error {
-                        XCTFail("Expected \(NetworkTestError.someError.testDescription), got \(error) instead.")
-                }
-        }
-
-        func test_whenAPIRespondsNonHandledStatusCode_networkProviderThrowsNetworkErrorOther() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy(
-                        dataToReturn: Data(),
-                        urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 1000)
-                )
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.other.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.other
-                        )
+                        Issue.record("Expected \(NetworkProviderError.other.localizedDescription), got success instead.")
                 } catch {
-                        XCTFail("Expected \(NetworkProviderError.other.testDescription), got error \(error) instead.")
+                        // Then
+                        #expect(error == expectedError)
                 }
         }
 
-        func test_whenAPIRespondsNonHTTPResponse_networkProviderThrowsNetworkErrorNonHTTPResponse() async {
+        @Test("When API returns non HTTP response, network provider throws same error")
+        func testNonHTTPResponse() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy(
                         dataToReturn: Data(),
@@ -98,119 +97,15 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.nonHTTResponse.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.nonHTTResponse
-                        )
+                        Issue.record("Expected \(NetworkProviderError.nonHTTResponse.testDescription), got success instead.")
                 } catch {
-                        XCTFail("Expected \(NetworkProviderError.nonHTTResponse.testDescription), got error \(error) instead.")
+                        // Then
+                        #expect(error == NetworkProviderError.nonHTTResponse)
                 }
         }
 
-        func test_whenAPIResponds403_networkProviderThrowsNetworkErrorUnauthorized() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy.fixture(urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 403))
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.unauthorized.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.unauthorized
-                        )
-                } catch {
-                        XCTFail("Expected \(NetworkProviderError.unauthorized.testDescription), got error \(error) instead.")
-                }
-        }
-
-        func test_whenAPIResponds404_networkProviderThrowsNetworkErrorNotFound() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy.fixture(urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 404))
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.notFound.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.notFound
-                        )
-                } catch {
-                        XCTFail("Expected \(NetworkProviderError.notFound.testDescription), got error \(error) instead.")
-                }
-        }
-
-        func test_whenAPIResponds408OrTimeout_networkProviderThrowsNetworkErrorTimeout() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy.fixture(urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 408))
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.timeout.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.timeout
-                        )
-                } catch {
-                        XCTFail("Expected \(NetworkProviderError.timeout.testDescription), got error \(error) instead.")
-                }
-        }
-
-        func test_whenAPIRespondsRange400499_networkProviderThrowsNetworkErrorInvalidRequest() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy.fixture(urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 499))
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.invalidRequest.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.invalidRequest
-                        )
-                } catch {
-                        XCTFail("Expected \(NetworkProviderError.invalidRequest.testDescription), got error \(error) instead.")
-                }
-        }
-
-        func test_whenAPIRespondsRange500599_networkProviderThrowsNetworkErrorServerError() async {
-                // Given
-                let networkSessionSpy = NetworkSessionSpy.fixture(urlResponseToReturn: HTTPURLResponse.fixture(statusCode: 599))
-                let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-
-                do {
-                        // When
-                        let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.serverError.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.serverError
-                        )
-                } catch {
-                        XCTFail("Expected \(NetworkProviderError.serverError.testDescription), got error \(error) instead.")
-                }
-        }
-
-        func test_whenAPIRespondsRange200299AndNoData_networkProviderThrowsNetworkErrorNoData() async {
+        @Test("When API response is in range 200...299 and no data is returned, network provider throws no data")
+        func test200RangeNoData() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy.fixture(dataToReturn: Data())
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
@@ -218,38 +113,33 @@ final class NetworkProviderImplementationTests: XCTestCase {
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.noData.testDescription), got success instead.")
-                } catch let errorThrown as NetworkProviderError {
-                        // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.noData
-                        )
+                        Issue.record("Expected \(NetworkProviderError.noData.testDescription), got success instead.")
                 } catch {
-                        XCTFail("Expected \(NetworkProviderError.noData.testDescription), got error \(error) instead.")
+                        // Then
+                        #expect(error == NetworkProviderError.noData)
                 }
         }
 
-        func test_whenURLIsInvalid_providerThrowsNetworkErrorInvalidURL() async {
+        @Test("When URL is invalid, network provider throws same error")
+        func testInvalidURL() async {
                 // Given
                 let networkProvider = NetworkProviderImplementation(networkSession: NetworkSessionFake())
 
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.invalidURLEndpoint)
-                        XCTFail("Expected \(NetworkProviderError.invalidURL.testDescription) thrown, got success instead.")
-                } catch let errorThrown as NetworkProviderError {
+                        Issue.record("Expected \(NetworkProviderError.invalidURL.testDescription) thrown, got success instead.")
+                } catch {
                         // Then
-                        XCTAssertEqual(
-                                errorThrown,
-                                NetworkProviderError.invalidURL
-                        )
-                } catch let error {
-                        XCTFail("Expected \(NetworkProviderError.invalidURL.testDescription), got error \(error) instead.")
+                        #expect(error == NetworkProviderError.invalidURL)
                 }
         }
+}
 
-        func test_whenProviderMakesSeveralRequests_usesTheSameNetworkSessionInstance() async {
+@Suite("NetworkProviderImplementation Processing")
+struct NetworkProviderImplementationProcessingTests {
+        @Test("When network provider makes several requests, it uses the same network session instance")
+        func testSameNetworkSessionInstance() async {
                 // Given
                 let endpoint = StubEndpoint.getEndpoint
                 let networkSessionSpy = NetworkSessionSpy.fixture()
@@ -262,16 +152,14 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         let _: StubInstance1 = try await networkProvider.request(endpoint)
 
                         // Then
-                        XCTAssertEqual(
-                                networkSessionSpy.dataForRequestMethodWasCalledXTimes,
-                                3
-                        )
+                        #expect(networkSessionSpy.dataForRequestMethodWasCalledXTimes == 3)
                 } catch let error {
-                        XCTFail("Expected success, got \(error) instead.")
+                        Issue.record("Expected success, got \(error) instead.")
                 }
         }
 
-        func test_whenEndpointBodyIsPlain_requestMustNotHaveBodyOrParameters() async {
+        @Test("When endpoint body is plain, request must not have body or parameters")
+        func testPlainEndpointBody() async {
                 // Given
                 let endpoint = StubEndpoint.getEndpoint
                 let networkSessionSpy = NetworkSessionSpy.fixture()
@@ -281,18 +169,16 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         // When
                         let _: StubInstance1 = try await sut.request(endpoint)
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
-                        XCTAssertEqual(
-                                receivedURLRequest?.url?.path(),
-                                endpoint.path
-                        )
-                        XCTAssertNil(receivedURLRequest?.httpBody)
-                        XCTAssertNil(receivedURLRequest?.value(forHTTPHeaderField: HTTPHeader.Key.contentType))
+                        #expect(receivedURLRequest?.url?.path() == endpoint.path)
+                        #expect(receivedURLRequest?.httpBody == nil)
+                        #expect(receivedURLRequest?.value(forHTTPHeaderField: HTTPHeader.Key.contentType) == nil)
                 } catch {
-                        XCTFail("Expected success, got \(error) instead.")
+                        Issue.record("Expected success, got \(error) instead.")
                 }
         }
 
-        func test_whenEndpointBodyIsEncodable_requestHasJSONHeadersAndBody() async {
+        @Test("When endpoint body is encodable, request has JSON headers and body")
+        func testEncodableBody() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
@@ -305,34 +191,26 @@ final class NetworkProviderImplementationTests: XCTestCase {
 
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
-                        XCTAssertEqual(
-                                receivedURLRequest?.url?.path(),
-                                endpoint.path
-                        )
+                        #expect(receivedURLRequest?.url?.path() == endpoint.path)
 
                         if let receivedHTTPBody = receivedURLRequest?.httpBody {
                                 if let receivedBody = try? JSONDecoder().decode(StubRequest.self, from: receivedHTTPBody) {
-                                        XCTAssertEqual(
-                                                receivedBody,
-                                                encodableRequest
-                                        )
+                                        #expect(receivedBody == encodableRequest)
                                 } else {
-                                        XCTFail("Failed to decode HTTPBody into ValidEncodableRequest.")
+                                        Issue.record("Failed to decode HTTPBody into ValidEncodableRequest.")
                                 }
                         } else {
-                                XCTFail("Expected HTTPBody, got nil instead.")
+                                Issue.record("Expected HTTPBody, got nil instead.")
                         }
 
-                        XCTAssertEqual(
-                                receivedURLRequest?.value(forHTTPHeaderField: HTTPHeader.Key.contentType),
-                                HTTPHeader.Value.applicationJSON
-                        )
+                        #expect(receivedURLRequest?.value(forHTTPHeaderField: HTTPHeader.Key.contentType) == HTTPHeader.Value.applicationJSON)
                 } catch {
-                        XCTFail("Expected success, got \(error) instead.")
+                        Issue.record("Expected success, got \(error) instead.")
                 }
         }
 
-        func test_whenEndpointBodyIsQueryParameter_requestHasCorrectQueryItems() async {
+        @Test("When endpoint body is query parameter, request has correct query items")
+        func testQueryParameter() async {
                 // Given
                 let queryItemSorting: (URLQueryItem, URLQueryItem) -> Bool = { $0.name < $1.name }
                 let queryParameters: [String: String?] = [
@@ -357,19 +235,17 @@ final class NetworkProviderImplementationTests: XCTestCase {
                                 // Then
                                 let receivedQueryParameters = getQueryItems(from: receivedURLRequest)
                                         .sorted(by: queryItemSorting)
-                                XCTAssertEqual(
-                                        receivedQueryParameters,
-                                        expectedQueryParameters
-                                )
+                                #expect(receivedQueryParameters == expectedQueryParameters)
                         } else {
-                                XCTFail("Expected URLRequest, got nil instead.")
+                                Issue.record("Expected URLRequest, got nil instead.")
                         }
                 } catch {
-                        XCTFail("doesn't matter error \(error)")
+                        Issue.record("doesn't matter error \(error)")
                 }
         }
 
-        func test_whenEndpointHasCustomHeaders_requestHasCorrectHeaders() async {
+        @Test("When endpoint has custom headers, request has correct headers")
+        func testHeaders() async {
                 // Given
                 let queryParameters: [String: String?] = [
                         "query": "value"
@@ -384,16 +260,14 @@ final class NetworkProviderImplementationTests: XCTestCase {
 
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
-                        XCTAssertEqual(
-                                receivedURLRequest?.allHTTPHeaderFields,
-                                expectedHeaders
-                        )
+                        #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
                 } catch {
-                        XCTFail("Expected success, got error \(error) instead.")
+                        Issue.record("Expected success, got error \(error) instead.")
                 }
         }
 
-        func test_whenEndpointHasCustomPath_requestHasCorrectPath() async {
+        @Test("When endpoint has custom path, request has correct path")
+        func testCustomPath() async {
                 // Given
                 let queryParameters: [String: String?] = [
                         "key": "value"
@@ -408,16 +282,14 @@ final class NetworkProviderImplementationTests: XCTestCase {
 
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
-                        XCTAssertEqual(
-                                receivedURLRequest?.url?.path(),
-                                endpoint.path
-                        )
+                        #expect(receivedURLRequest?.url?.path() == endpoint.path)
                 } catch {
-                        XCTFail("Expected success, got error \(error) instead.")
+                        Issue.record("Expected success, got error \(error) instead.")
                 }
         }
 
-        func test_networkProviderSetsCorrectHTTPMethodFromEndpointInURLRequest() async {
+        @Test("Network Provider sets correct HTTP method from endpoint in URL request")
+        func testHTTPMethod() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
@@ -430,20 +302,15 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         let receivedPostURLRequest = networkSessionSpy.receivedURLRequest
 
                         // Then
-                        XCTAssertEqual(
-                                receivedGetURLRequest?.httpMethod,
-                                HTTPMethod.get.rawValue
-                        )
-                        XCTAssertEqual(
-                                receivedPostURLRequest?.httpMethod,
-                                HTTPMethod.post.rawValue
-                        )
+                        #expect(receivedGetURLRequest?.httpMethod == HTTPMethod.get.rawValue)
+                        #expect(receivedPostURLRequest?.httpMethod == HTTPMethod.post.rawValue)
                 } catch {
-                        XCTFail("Expected success, got error \(error) instead.")
+                        Issue.record("Expected success, got error \(error) instead.")
                 }
         }
 
-        func test_networkProviderDecodesExpectedResponse() async {
+        @Test("Network provider decodes expected response")
+        func testDecodeResponse() async {
                 // Given
                 let expectedInstance = StubInstance1.fixture()
                 let sut = NetworkProviderImplementation(networkSession: NetworkSessionSpy.fixture())
@@ -453,17 +320,16 @@ final class NetworkProviderImplementationTests: XCTestCase {
                         let receivedInstance: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
 
                         // Then
-                        XCTAssertEqual(
-                                receivedInstance,
-                                expectedInstance
-                        )
+                        #expect(receivedInstance == expectedInstance)
                 } catch {
-                        XCTFail("Expected success, got error \(error) instead.")
+                        Issue.record("Expected success, got error \(error) instead.")
                 }
         }
+}
 
-        // MARK: - Utility methods
-        func getQueryItems(from request: URLRequest) -> [URLQueryItem] {
+// MARK: - Helpers
+extension NetworkProviderImplementationProcessingTests {
+        private func getQueryItems(from request: URLRequest) -> [URLQueryItem] {
                 guard
                         let url = request.url,
                         let components = URLComponents(
