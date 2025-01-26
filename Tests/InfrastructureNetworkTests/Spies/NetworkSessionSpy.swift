@@ -1,5 +1,4 @@
 import Foundation
-
 @testable import InfrastructureNetwork
 
 final class NetworkSessionSpy: NetworkSession {
