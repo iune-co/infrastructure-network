@@ -3,7 +3,7 @@ import Foundation
 public final class NetworkProviderImplementation {
         private let logger: NetworkLogger?
         private let networkSession: NetworkSession
-        
+
         public init(
                 logger: NetworkLogger? = nil,
                 networkSession: NetworkSession
@@ -16,8 +16,8 @@ public final class NetworkProviderImplementation {
 extension NetworkProviderImplementation: NetworkProvider {
         public func request<
                 ResponseType: Decodable,
-                EndpointType: Endpoint>
-        (_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
+                EndpointType: Endpoint
+        >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
                 do {
                         let urlRequest = try prepareUrlRequest(for: endpoint)
                         logger?.log(request: urlRequest)
@@ -26,9 +26,9 @@ extension NetworkProviderImplementation: NetworkProvider {
                                 response: urlResponse,
                                 data: data
                         )
-                        
+
                         try validate(urlResponse: urlResponse, data: data)
-                        
+
                         do {
                                 return try JSONDecoder()
                                         .decode(
@@ -98,7 +98,7 @@ extension NetworkProviderImplementation {
 
                 return urlRequest
         }
-        
+
         private func validate(
                 urlResponse: URLResponse,
                 data: Data
@@ -106,29 +106,29 @@ extension NetworkProviderImplementation {
                 guard let httpResponse = urlResponse as? HTTPURLResponse else {
                         throw NetworkProviderError.nonHTTResponse
                 }
-                
+
                 switch httpResponse.statusCode {
                         case 404:
                                 throw NetworkProviderError.notFound
-                                
+
                         case 403:
                                 throw NetworkProviderError.unauthorized
-                                
+
                         case 408:
                                 throw NetworkProviderError.timeout
-                                
+
                         case 400...499:
                                 throw NetworkProviderError.invalidRequest
-                                
+
                         case 500...599:
                                 throw NetworkProviderError.serverError
-                                
+
                         case 200...299:
                                 guard !data.isEmpty else {
                                         throw NetworkProviderError.noData
                                 }
                                 break
-                                
+
                         default:
                                 throw NetworkProviderError.other
                 }

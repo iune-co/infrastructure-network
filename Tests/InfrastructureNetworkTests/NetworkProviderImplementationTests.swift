@@ -1,7 +1,7 @@
-@testable import InfrastructureNetwork
 import Foundation
 import Testing
 
+@testable import InfrastructureNetwork
 
 @Suite("NetworkProviderImplementation Error Handling")
 struct NetworkProviderImplementationErrorHandlingTests {
@@ -26,7 +26,7 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         urlResponseToReturn: returnURLResponse
                 )
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
@@ -36,12 +36,12 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == expectedError)
                 }
         }
-        
+
         @Test("When decoding fails, network provider throws parsing error")
         func testFailDecoding() async {
                 // Given
                 let sut = NetworkProviderImplementation(networkSession: NetworkSessionSpy.fixture())
-                
+
                 do {
                         // When
                         let _: StubInstance2 = try await sut.request(StubEndpoint.getEndpoint)
@@ -51,13 +51,13 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == NetworkProviderError.parsingError)
                 }
         }
-        
+
         @Test("When network sessions throws not connected to internet, network provider throws no network connection")
         func testNoNetworkConnection() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy(errorToThrow: URLError(.notConnectedToInternet))
                 let networkProvider = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
@@ -67,14 +67,14 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == NetworkProviderError.noNetworkConnection)
                 }
         }
-        
+
         @Test("When network sesions throws other error, network provider throws same error")
         func testOtherError() async {
                 // Given
                 let expectedError = NetworkProviderError.other
                 let networkSessionSpy = NetworkSessionSpy(errorToThrow: expectedError)
                 let networkProvider = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.getEndpoint)
@@ -84,7 +84,7 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == expectedError)
                 }
         }
-        
+
         @Test("When API returns non HTTP response, network provider throws same error")
         func testNonHTTPResponse() async {
                 // Given
@@ -93,7 +93,7 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         urlResponseToReturn: URLResponse()
                 )
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
@@ -103,13 +103,13 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == NetworkProviderError.nonHTTResponse)
                 }
         }
-        
+
         @Test("When API response is in range 200...299 and no data is returned, network provider throws no data")
         func test200RangeNoData() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy.fixture(dataToReturn: Data())
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
@@ -119,12 +119,12 @@ struct NetworkProviderImplementationErrorHandlingTests {
                         #expect(error == NetworkProviderError.noData)
                 }
         }
-        
+
         @Test("When URL is invalid, network provider throws same error")
         func testInvalidURL() async {
                 // Given
                 let networkProvider = NetworkProviderImplementation(networkSession: NetworkSessionFake())
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(StubEndpoint.invalidURLEndpoint)
@@ -144,27 +144,27 @@ struct NetworkProviderImplementationProcessingTests {
                 let endpoint = StubEndpoint.getEndpoint
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let networkProvider = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await networkProvider.request(endpoint)
                         let _: StubInstance1 = try await networkProvider.request(endpoint)
                         let _: StubInstance1 = try await networkProvider.request(endpoint)
-                        
+
                         // Then
                         #expect(networkSessionSpy.dataForRequestMethodWasCalledXTimes == 3)
                 } catch let error {
                         Issue.record("Expected success, got \(error) instead.")
                 }
         }
-        
+
         @Test("When endpoint body is plain, request must not have body or parameters")
         func testPlainEndpointBody() async {
                 // Given
                 let endpoint = StubEndpoint.getEndpoint
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(endpoint)
@@ -176,7 +176,7 @@ struct NetworkProviderImplementationProcessingTests {
                         Issue.record("Expected success, got \(error) instead.")
                 }
         }
-        
+
         @Test("When endpoint body is encodable, request has JSON headers and body")
         func testEncodableBody() async {
                 // Given
@@ -184,15 +184,15 @@ struct NetworkProviderImplementationProcessingTests {
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
                 let encodableRequest = StubRequest.fixture()
                 let endpoint = StubEndpoint.encodableBodyEndpoint(encodableRequest)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(endpoint)
-                        
+
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
                         #expect(receivedURLRequest?.url?.path() == endpoint.path)
-                        
+
                         if let receivedHTTPBody = receivedURLRequest?.httpBody {
                                 if let receivedBody = try? JSONDecoder().decode(StubRequest.self, from: receivedHTTPBody) {
                                         #expect(receivedBody == encodableRequest)
@@ -202,13 +202,13 @@ struct NetworkProviderImplementationProcessingTests {
                         } else {
                                 Issue.record("Expected HTTPBody, got nil instead.")
                         }
-                        
+
                         #expect(receivedURLRequest?.value(forHTTPHeaderField: HTTPHeader.Key.contentType) == HTTPHeader.Value.applicationJSON)
                 } catch {
                         Issue.record("Expected success, got \(error) instead.")
                 }
         }
-        
+
         @Test("When endpoint body is query parameter, request has correct query items")
         func testQueryParameter() async {
                 // Given
@@ -221,16 +221,16 @@ struct NetworkProviderImplementationProcessingTests {
                         "parameterWithNoValue": nil,
                 ]
                 let expectedQueryParameters =
-                queryParameters
+                        queryParameters
                         .map(URLQueryItem.init)
                         .sorted(by: queryItemSorting)
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.queryParametersEndpoint(queryParameters))
-                        
+
                         if let receivedURLRequest = networkSessionSpy.receivedURLRequest {
                                 // Then
                                 let receivedQueryParameters = getQueryItems(from: receivedURLRequest)
@@ -243,7 +243,7 @@ struct NetworkProviderImplementationProcessingTests {
                         Issue.record("doesn't matter error \(error)")
                 }
         }
-        
+
         @Test("When endpoint has custom headers, request has correct headers")
         func testHeaders() async {
                 // Given
@@ -253,11 +253,11 @@ struct NetworkProviderImplementationProcessingTests {
                 let expectedHeaders = StubEndpoint.queryParametersEndpoint(queryParameters).headers
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.queryParametersEndpoint(queryParameters))
-                        
+
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
                         #expect(receivedURLRequest?.allHTTPHeaderFields == expectedHeaders)
@@ -265,7 +265,7 @@ struct NetworkProviderImplementationProcessingTests {
                         Issue.record("Expected success, got error \(error) instead.")
                 }
         }
-        
+
         @Test("When endpoint has custom path, request has correct path")
         func testCustomPath() async {
                 // Given
@@ -275,11 +275,11 @@ struct NetworkProviderImplementationProcessingTests {
                 let endpoint = StubEndpoint.queryParametersEndpoint(queryParameters)
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(endpoint)
-                        
+
                         // Then
                         let receivedURLRequest = networkSessionSpy.receivedURLRequest
                         #expect(receivedURLRequest?.url?.path() == endpoint.path)
@@ -287,20 +287,20 @@ struct NetworkProviderImplementationProcessingTests {
                         Issue.record("Expected success, got error \(error) instead.")
                 }
         }
-        
+
         @Test("Network Provider sets correct HTTP method from endpoint in URL request")
         func testHTTPMethod() async {
                 // Given
                 let networkSessionSpy = NetworkSessionSpy.fixture()
                 let sut = NetworkProviderImplementation(networkSession: networkSessionSpy)
-                
+
                 do {
                         // When
                         let _: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
                         let receivedGetURLRequest = networkSessionSpy.receivedURLRequest
                         let _: StubInstance1 = try await sut.request(StubEndpoint.postEndpoint)
                         let receivedPostURLRequest = networkSessionSpy.receivedURLRequest
-                        
+
                         // Then
                         #expect(receivedGetURLRequest?.httpMethod == HTTPMethod.get.rawValue)
                         #expect(receivedPostURLRequest?.httpMethod == HTTPMethod.post.rawValue)
@@ -308,17 +308,17 @@ struct NetworkProviderImplementationProcessingTests {
                         Issue.record("Expected success, got error \(error) instead.")
                 }
         }
-        
+
         @Test("Network provider decodes expected response")
         func testDecodeResponse() async {
                 // Given
                 let expectedInstance = StubInstance1.fixture()
                 let sut = NetworkProviderImplementation(networkSession: NetworkSessionSpy.fixture())
-                
+
                 do {
                         // When
                         let receivedInstance: StubInstance1 = try await sut.request(StubEndpoint.getEndpoint)
-                        
+
                         // Then
                         #expect(receivedInstance == expectedInstance)
                 } catch {
@@ -340,7 +340,7 @@ extension NetworkProviderImplementationProcessingTests {
                 else {
                         return .init()
                 }
-                
+
                 return queryItems
         }
 }
