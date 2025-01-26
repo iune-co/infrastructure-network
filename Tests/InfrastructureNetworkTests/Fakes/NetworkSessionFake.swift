@@ -1,4 +1,5 @@
 import Foundation
+
 @testable import InfrastructureNetwork
 
 final class NetworkSessionFake: NetworkSession {
