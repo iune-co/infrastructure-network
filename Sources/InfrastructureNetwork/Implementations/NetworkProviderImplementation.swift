@@ -1,9 +1,9 @@
 import Foundation
 
-public final class NetworkProviderImplementation: NetworkProvider {
+public final class NetworkProviderImplementation {
         private let logger: NetworkLogger?
         private let networkSession: NetworkSession
-
+        
         public init(
                 logger: NetworkLogger? = nil,
                 networkSession: NetworkSession
@@ -11,7 +11,9 @@ public final class NetworkProviderImplementation: NetworkProvider {
                 self.logger = logger
                 self.networkSession = networkSession
         }
+}
 
+extension NetworkProviderImplementation: NetworkProvider {
         public func request<
                 ResponseType: Decodable,
                 EndpointType: Endpoint>
@@ -24,37 +26,9 @@ public final class NetworkProviderImplementation: NetworkProvider {
                                 response: urlResponse,
                                 data: data
                         )
-
-                        guard let httpResponse = urlResponse as? HTTPURLResponse else {
-                                throw NetworkProviderError.nonHTTResponse
-                        }
-
-                        switch httpResponse.statusCode {
-                                case 404:
-                                        throw NetworkProviderError.notFound
-
-                                case 403:
-                                        throw NetworkProviderError.unauthorized
-
-                                case 408:
-                                        throw NetworkProviderError.timeout
-
-                                case 400...499:
-                                        throw NetworkProviderError.invalidRequest
-
-                                case 500...599:
-                                        throw NetworkProviderError.serverError
-
-                                case 200...299:
-                                        guard !data.isEmpty else {
-                                                throw NetworkProviderError.noData
-                                        }
-                                        break
-
-                                default:
-                                        throw NetworkProviderError.other
-                        }
-
+                        
+                        try validate(urlResponse: urlResponse, data: data)
+                        
                         do {
                                 return try JSONDecoder()
                                         .decode(
@@ -71,15 +45,18 @@ public final class NetworkProviderImplementation: NetworkProvider {
                 } catch let error as URLError where error.code == .notConnectedToInternet {
                         logger?.log(error: error)
                         throw NetworkProviderError.noNetworkConnection
+                } catch let error as NetworkProviderError {
+                        throw error
                 } catch {
                         logger?.log(error: error)
                         throw NetworkProviderError.other
                 }
         }
+}
 
-        private func prepareUrlRequest<EndpointType: Endpoint>(
-                for endpoint: EndpointType
-        ) throws -> URLRequest {
+// MARK: - Helpers
+extension NetworkProviderImplementation {
+        private func prepareUrlRequest<EndpointType: Endpoint>(for endpoint: EndpointType) throws -> URLRequest {
                 let urlString = endpoint.baseURL + endpoint.path
 
                 guard let url = URL(string: urlString) else {
@@ -120,5 +97,40 @@ public final class NetworkProviderImplementation: NetworkProvider {
                 }
 
                 return urlRequest
+        }
+        
+        private func validate(
+                urlResponse: URLResponse,
+                data: Data
+        ) throws(NetworkProviderError) {
+                guard let httpResponse = urlResponse as? HTTPURLResponse else {
+                        throw NetworkProviderError.nonHTTResponse
+                }
+                
+                switch httpResponse.statusCode {
+                        case 404:
+                                throw NetworkProviderError.notFound
+                                
+                        case 403:
+                                throw NetworkProviderError.unauthorized
+                                
+                        case 408:
+                                throw NetworkProviderError.timeout
+                                
+                        case 400...499:
+                                throw NetworkProviderError.invalidRequest
+                                
+                        case 500...599:
+                                throw NetworkProviderError.serverError
+                                
+                        case 200...299:
+                                guard !data.isEmpty else {
+                                        throw NetworkProviderError.noData
+                                }
+                                break
+                                
+                        default:
+                                throw NetworkProviderError.other
+                }
         }
 }
