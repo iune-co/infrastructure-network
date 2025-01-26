@@ -12,9 +12,10 @@ public final class NetworkProviderImplementation: NetworkProvider {
                 self.networkSession = networkSession
         }
 
-        public func request<ResponseType: Decodable, EndpointType: Endpoint>(
-                _ endpoint: EndpointType
-        ) async throws -> ResponseType {
+        public func request<
+                ResponseType: Decodable,
+                EndpointType: Endpoint>
+        (_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
                 do {
                         let urlRequest = try prepareUrlRequest(for: endpoint)
                         logger?.log(request: urlRequest)
@@ -72,7 +73,7 @@ public final class NetworkProviderImplementation: NetworkProvider {
                         throw NetworkProviderError.noNetworkConnection
                 } catch {
                         logger?.log(error: error)
-                        throw error
+                        throw NetworkProviderError.other
                 }
         }
 
