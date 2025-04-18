@@ -1,5 +1,6 @@
 import Foundation
 
+// MARK: - Init + Properties
 public final class NetworkProviderImplementation {
         private let logger: NetworkLogger?
         private let networkSession: NetworkSession
@@ -13,43 +14,27 @@ public final class NetworkProviderImplementation {
         }
 }
 
+// MARK: - NetworkProvider
 extension NetworkProviderImplementation: NetworkProvider {
         public func request<
                 ResponseType: Decodable,
                 EndpointType: Endpoint
         >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
-                do {
-                        let urlRequest = try prepareUrlRequest(for: endpoint)
-                        logger?.log(request: urlRequest)
-                        let (data, urlResponse) = try await networkSession.data(for: urlRequest)
-                        logger?.log(
-                                response: urlResponse,
-                                data: data
-                        )
-
-                        try validate(urlResponse: urlResponse, data: data)
-
+                try await perform { [self] in
+                        let data = try await fetchData(for: endpoint)
                         do {
-                                return try JSONDecoder()
-                                        .decode(
-                                                ResponseType.self,
-                                                from: data
-                                        )
+                                return try JSONDecoder().decode(ResponseType.self, from: data)
                         } catch {
                                 logger?.log(error: error)
                                 throw NetworkProviderError.parsingError
                         }
-                } catch let error as URLError where error.code == .timedOut {
-                        logger?.log(error: error)
-                        throw NetworkProviderError.timeout
-                } catch let error as URLError where error.code == .notConnectedToInternet {
-                        logger?.log(error: error)
-                        throw NetworkProviderError.noNetworkConnection
-                } catch let error as NetworkProviderError {
-                        throw error
-                } catch {
-                        logger?.log(error: error)
-                        throw NetworkProviderError.other
+                }
+        }
+        
+        // TODO: test
+        public func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data {
+                try await perform { [self] in
+                        try await fetchData(for: endpoint)
                 }
         }
 }
@@ -131,6 +116,32 @@ extension NetworkProviderImplementation {
 
                         default:
                                 throw NetworkProviderError.other
+                }
+        }
+        
+        private func fetchData<EndpointType: Endpoint>(for endpoint: EndpointType) async throws -> Data {
+                let urlRequest = try prepareUrlRequest(for: endpoint)
+                logger?.log(request: urlRequest)
+                let (data, response) = try await networkSession.data(for: urlRequest)
+                logger?.log(response: response, data: data)
+                try validate(urlResponse: response, data: data)
+                return data
+        }
+        
+        private func perform<T>(_ operation: @escaping () async throws -> T) async throws(NetworkProviderError) -> T {
+                do {
+                        return try await operation()
+                } catch let error as URLError where error.code == .timedOut {
+                        logger?.log(error: error)
+                        throw NetworkProviderError.timeout
+                } catch let error as URLError where error.code == .notConnectedToInternet {
+                        logger?.log(error: error)
+                        throw NetworkProviderError.noNetworkConnection
+                } catch let error as NetworkProviderError {
+                        throw error
+                } catch {
+                        logger?.log(error: error)
+                        throw NetworkProviderError.other
                 }
         }
 }

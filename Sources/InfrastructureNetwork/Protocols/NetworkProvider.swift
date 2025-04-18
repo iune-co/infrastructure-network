@@ -5,4 +5,6 @@ public protocol NetworkProvider {
                 ResponseType: Decodable,
                 EndpointType: Endpoint
         >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType
+        
+        func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data
 }
