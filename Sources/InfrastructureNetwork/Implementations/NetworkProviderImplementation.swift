@@ -31,7 +31,6 @@ extension NetworkProviderImplementation: NetworkProvider {
                 }
         }
         
-        // TODO: test
         public func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data {
                 try await perform { [self] in
                         try await fetchData(for: endpoint)
