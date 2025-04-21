@@ -1,8 +1,8 @@
 import Foundation
 
-public protocol NetworkProvider {
+public protocol NetworkProvider: Actor {
         func request<
-                ResponseType: Decodable,
+                ResponseType: Decodable & Sendable,
                 EndpointType: Endpoint
         >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType
         

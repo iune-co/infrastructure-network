@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Init + Properties
-public final class NetworkProviderImplementation {
+actor NetworkProviderImplementation {
         private let logger: NetworkLogger?
         private let networkSession: NetworkSession
 
@@ -17,17 +17,17 @@ public final class NetworkProviderImplementation {
 // MARK: - NetworkProvider
 extension NetworkProviderImplementation: NetworkProvider {
         public func request<
-                ResponseType: Decodable,
+                ResponseType: Decodable & Sendable,
                 EndpointType: Endpoint
         >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
-                try await perform { [self] in
-                        let data = try await fetchData(for: endpoint)
-                        do {
-                                return try JSONDecoder().decode(ResponseType.self, from: data)
-                        } catch {
-                                logger?.log(error: error)
-                                throw NetworkProviderError.parsingError
-                        }
+                let data = try await perform {
+                        try await fetchData(for: endpoint)
+                }
+                do {
+                        return try JSONDecoder().decode(ResponseType.self, from: data)
+                } catch {
+                        await logger?.log(error: error)
+                        throw NetworkProviderError.parsingError
                 }
         }
         
@@ -120,26 +120,26 @@ extension NetworkProviderImplementation {
         
         private func fetchData<EndpointType: Endpoint>(for endpoint: EndpointType) async throws -> Data {
                 let urlRequest = try prepareUrlRequest(for: endpoint)
-                logger?.log(request: urlRequest)
+                await logger?.log(request: urlRequest)
                 let (data, response) = try await networkSession.data(for: urlRequest)
-                logger?.log(response: response, data: data)
+                await logger?.log(response: response, data: data)
                 try validate(urlResponse: response, data: data)
                 return data
         }
         
-        private func perform<T>(_ operation: @escaping () async throws -> T) async throws(NetworkProviderError) -> T {
+        private func perform<T: Sendable>(_ operation: @Sendable () async throws -> T) async throws(NetworkProviderError) -> T {
                 do {
                         return try await operation()
                 } catch let error as URLError where error.code == .timedOut {
-                        logger?.log(error: error)
+                        await logger?.log(error: error)
                         throw NetworkProviderError.timeout
                 } catch let error as URLError where error.code == .notConnectedToInternet {
-                        logger?.log(error: error)
+                        await logger?.log(error: error)
                         throw NetworkProviderError.noNetworkConnection
                 } catch let error as NetworkProviderError {
                         throw error
                 } catch {
-                        logger?.log(error: error)
+                        await logger?.log(error: error)
                         throw NetworkProviderError.other
                 }
         }

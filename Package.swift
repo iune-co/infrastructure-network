@@ -4,12 +4,7 @@ import PackageDescription
 
 let package = Package(
         name: "InfrastructureNetwork",
-        platforms: [
-                .iOS(.v16),
-                .macOS(.v12),
-                .watchOS(.v8),
-                .tvOS(.v15),
-        ],
+        platforms: [.iOS(.v17)],
         products: [
                 .library(
                         name: "InfrastructureNetwork",

@@ -1,4 +1,4 @@
-public protocol Endpoint {
+public protocol Endpoint: Sendable {
         var baseURL: String { get }
         var path: String { get }
         var method: HTTPMethod { get }

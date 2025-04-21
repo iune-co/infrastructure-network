@@ -1,3 +1,4 @@
 import Foundation
 
-extension URLSession: NetworkSession {}
+// TODO: confirm URLSession is internally thread-safe
+extension URLSession: NetworkSession, @unchecked Sendable {}

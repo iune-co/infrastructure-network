@@ -2,7 +2,8 @@ import Foundation
 
 @testable import InfrastructureNetwork
 
-final class NetworkSessionSpy: NetworkSession {
+// FIX: not really sendable, mutable properties
+final class NetworkSessionSpy: NetworkSession, @unchecked Sendable {
         var errorToThrow: Error?
         var dataToReturn: Data?
         var urlResponseToReturn: URLResponse?
