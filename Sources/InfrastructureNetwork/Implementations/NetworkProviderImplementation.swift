@@ -4,13 +4,19 @@ import Foundation
 actor NetworkProviderImplementation {
         private let logger: NetworkLogger?
         private let networkSession: NetworkSession
+        private let decoder: JSONDecoder
+        private let encoder: JSONEncoder
 
         public init(
                 logger: NetworkLogger? = nil,
-                networkSession: NetworkSession
+                networkSession: NetworkSession,
+                decoder: JSONDecoder = JSONDecoder(),
+                encoder: JSONEncoder = JSONEncoder()
         ) {
                 self.logger = logger
                 self.networkSession = networkSession
+                self.decoder = decoder
+                self.encoder = encoder
         }
 }
 
@@ -20,11 +26,9 @@ extension NetworkProviderImplementation: NetworkProvider {
                 ResponseType: Decodable & Sendable,
                 EndpointType: Endpoint
         >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
-                let data = try await perform {
-                        try await fetchData(for: endpoint)
-                }
+                let data = try await requestData(endpoint)
                 do {
-                        return try JSONDecoder().decode(ResponseType.self, from: data)
+                        return try decoder.decode(ResponseType.self, from: data)
                 } catch {
                         await logger?.log(error: error)
                         throw NetworkProviderError.parsingError
@@ -32,8 +36,8 @@ extension NetworkProviderImplementation: NetworkProvider {
         }
         
         public func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data {
-                try await perform { [self] in
-                        try await fetchData(for: endpoint)
+                try await perform {
+                        try await fetchRawData(for: endpoint, using: networkSession)
                 }
         }
 }
@@ -65,7 +69,7 @@ extension NetworkProviderImplementation {
                                 break
 
                         case let .encodable(parameters):
-                                urlRequest.httpBody = try JSONEncoder().encode(parameters)
+                                urlRequest.httpBody = try encoder.encode(parameters)
                                 urlRequest.addValue(
                                         HTTPHeader.Value.applicationJSON,
                                         forHTTPHeaderField: HTTPHeader.Key.contentType
@@ -118,8 +122,16 @@ extension NetworkProviderImplementation {
                 }
         }
         
-        private func fetchData<EndpointType: Endpoint>(for endpoint: EndpointType) async throws -> Data {
+        private func fetchRawData<EndpointType: Endpoint>(
+                for endpoint: EndpointType,
+                using networkSession: NetworkSession
+        ) async throws -> Data {
                 let urlRequest = try prepareUrlRequest(for: endpoint)
+                
+                if let cached = networkSession.cache(for: urlRequest) {
+                        return cached
+                }
+                
                 await logger?.log(request: urlRequest)
                 let (data, response) = try await networkSession.data(for: urlRequest)
                 await logger?.log(response: response, data: data)

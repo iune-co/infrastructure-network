@@ -3,13 +3,13 @@ import Foundation
 public struct NetworkProviderFactory {
         public static func createDefault() -> NetworkProvider {
                 let cache = URLCache(
-                        memoryCapacity: 50 * 1024,
+                        memoryCapacity: 50 * 1024 * 1024,
                         diskCapacity: 200 * 1024 * 1024,
                         diskPath: "urlcache"
                 )
                 let config = URLSessionConfiguration.default
                 config.urlCache = cache
-                config.requestCachePolicy = .useProtocolCachePolicy
+                config.requestCachePolicy = .returnCacheDataElseLoad
                 return NetworkProviderImplementation(
                         logger: NetworkLoggerImplementation(),
                         networkSession: URLSession(configuration: config)
@@ -19,7 +19,7 @@ public struct NetworkProviderFactory {
         public static func createDefault(with cache: URLCache) -> NetworkProvider {
                 let config = URLSessionConfiguration.default
                 config.urlCache = cache
-                config.requestCachePolicy = .useProtocolCachePolicy
+                config.requestCachePolicy = .returnCacheDataElseLoad
                 return NetworkProviderImplementation(
                         logger: NetworkLoggerImplementation(),
                         networkSession: URLSession(configuration: config)

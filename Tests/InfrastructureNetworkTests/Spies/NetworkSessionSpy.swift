@@ -6,17 +6,22 @@ import Foundation
 final class NetworkSessionSpy: NetworkSession, @unchecked Sendable {
         var errorToThrow: Error?
         var dataToReturn: Data?
+        var cachedDataToReturn: Data?
         var urlResponseToReturn: URLResponse?
         private(set) var dataForRequestMethodWasCalledXTimes = 0
+        private(set) var cachedForRequestMethodWasCalledXTimes = 0
         private(set) var receivedURLRequest: URLRequest?
+        private(set) var receivedCachedURLRequest: URLRequest?
 
         init(
                 errorToThrow: Error? = nil,
                 dataToReturn: Data? = nil,
+                cachedDataToReturn: Data? = nil,
                 urlResponseToReturn: URLResponse? = nil
         ) {
                 self.errorToThrow = errorToThrow
                 self.dataToReturn = dataToReturn
+                self.cachedDataToReturn = cachedDataToReturn
                 self.urlResponseToReturn = urlResponseToReturn
         }
 
@@ -38,5 +43,11 @@ final class NetworkSessionSpy: NetworkSession, @unchecked Sendable {
                 }
 
                 return (dataToReturn, urlResponseToReturn)
+        }
+        
+        func cache(for request: URLRequest) -> Data? {
+                receivedCachedURLRequest = request
+                cachedForRequestMethodWasCalledXTimes += 1
+                return cachedDataToReturn
         }
 }
