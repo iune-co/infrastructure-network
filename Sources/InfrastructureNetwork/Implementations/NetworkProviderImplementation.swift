@@ -149,11 +149,13 @@ extension NetworkProviderImplementation {
                 } catch let error as URLError where error.code == .notConnectedToInternet {
                         await logger?.log(error: error)
                         throw NetworkProviderError.noNetworkConnection
+                } catch let error as URLError where error.code == .cancelled {
+                        await logger?.log(error: error)
+                        throw NetworkProviderError.other
                 } catch let error as NetworkProviderError {
                         throw error
                 } catch {
-                        await logger?.log(error: error)
-                        throw NetworkProviderError.other
+                        throw .other
                 }
         }
 }
