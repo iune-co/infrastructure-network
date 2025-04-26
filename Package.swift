@@ -2,23 +2,33 @@
 
 import PackageDescription
 
+struct InfrastructureNetworkPackage {
+        static let name = "InfrastructureNetwork"
+        
+        static let testTargetName = name + "Tests"
+        
+        static var target: Target.Dependency {
+                .target(name: name)
+        }
+}
+
 let package = Package(
-        name: "InfrastructureNetwork",
+        name: InfrastructureNetworkPackage.name,
         platforms: [.iOS(.v17)],
         products: [
                 .library(
-                        name: "InfrastructureNetwork",
+                        name: InfrastructureNetworkPackage.name,
                         targets: [
-                                "InfrastructureNetwork"
+                                InfrastructureNetworkPackage.name
                         ]
                 )
         ],
         targets: [
-                .target(name: "InfrastructureNetwork"),
+                .target(name: InfrastructureNetworkPackage.name),
                 .testTarget(
-                        name: "InfrastructureNetworkTests",
+                        name: InfrastructureNetworkPackage.testTargetName,
                         dependencies: [
-                                "InfrastructureNetwork"
+                                InfrastructureNetworkPackage.target
                         ]
                 ),
         ]
