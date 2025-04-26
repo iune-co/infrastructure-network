@@ -1,15 +1,19 @@
 import Foundation
 
 // MARK: - Init + Properties
-actor NetworkProviderImplementation {
-        private let logger: NetworkLogger?
-        private let networkSession: NetworkSession
+actor NetworkProviderImplementation<
+        Logger: NetworkLogger,
+        Network: NetworkSession,
+        Path: Endpoint
+> {
+        private let logger: Logger?
+        private let networkSession: Network
         private let decoder: JSONDecoder
         private let encoder: JSONEncoder
 
         public init(
-                logger: NetworkLogger? = nil,
-                networkSession: NetworkSession,
+                logger: Logger? = nil,
+                networkSession: Network,
                 decoder: JSONDecoder = JSONDecoder(),
                 encoder: JSONEncoder = JSONEncoder()
         ) {
@@ -22,10 +26,7 @@ actor NetworkProviderImplementation {
 
 // MARK: - NetworkProvider
 extension NetworkProviderImplementation: NetworkProvider {
-        public func request<
-                ResponseType: Decodable & Sendable,
-                EndpointType: Endpoint
-        >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType {
+        public func request<ResponseType: Decodable & Sendable>(_ endpoint: Path) async throws(NetworkProviderError) -> ResponseType {
                 let data = try await requestData(endpoint)
                 do {
                         return try decoder.decode(ResponseType.self, from: data)
@@ -35,7 +36,7 @@ extension NetworkProviderImplementation: NetworkProvider {
                 }
         }
         
-        public func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data {
+        public func requestData(_ endpoint: Path) async throws(NetworkProviderError) -> Data {
                 try await perform {
                         try await fetchRawData(for: endpoint, using: networkSession)
                 }
@@ -44,7 +45,7 @@ extension NetworkProviderImplementation: NetworkProvider {
 
 // MARK: - Helpers
 extension NetworkProviderImplementation {
-        private func prepareUrlRequest<EndpointType: Endpoint>(for endpoint: EndpointType) throws -> URLRequest {
+        private func prepareUrlRequest(for endpoint: Path) throws -> URLRequest {
                 let urlString = endpoint.baseURL + endpoint.path
 
                 guard let url = URL(string: urlString) else {
@@ -122,8 +123,8 @@ extension NetworkProviderImplementation {
                 }
         }
         
-        private func fetchRawData<EndpointType: Endpoint>(
-                for endpoint: EndpointType,
+        private func fetchRawData(
+                for endpoint: Path,
                 using networkSession: NetworkSession
         ) async throws -> Data {
                 let urlRequest = try prepareUrlRequest(for: endpoint)

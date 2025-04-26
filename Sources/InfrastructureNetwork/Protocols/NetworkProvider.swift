@@ -1,10 +1,9 @@
 import Foundation
 
-public protocol NetworkProvider: Actor {
-        func request<
-                ResponseType: Decodable & Sendable,
-                EndpointType: Endpoint
-        >(_ endpoint: EndpointType) async throws(NetworkProviderError) -> ResponseType
+public protocol NetworkProvider<Path>: Actor {
+        associatedtype Path: Endpoint
         
-        func requestData<EndpointType: Endpoint>(_ endpoint: EndpointType) async throws(NetworkProviderError) -> Data
+        func request<ResponseType: Decodable & Sendable>(_ endpoint: Path) async throws(NetworkProviderError) -> ResponseType
+        
+        func requestData(_ endpoint: Path) async throws(NetworkProviderError) -> Data
 }
