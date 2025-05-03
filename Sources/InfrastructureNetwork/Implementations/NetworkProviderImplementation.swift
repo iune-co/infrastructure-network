@@ -76,12 +76,17 @@ extension NetworkProviderImplementation {
                                         forHTTPHeaderField: HTTPHeader.Key.contentType
                                 )
 
-                        case let .queryParameter(parameters):
+                        case let .queryParameters(parameters):
                                 guard var urlComponents = URLComponents(string: urlString) else {
                                         return urlRequest
                                 }
 
-                                urlComponents.queryItems = parameters.map(URLQueryItem.init)
+                                urlComponents.queryItems = parameters.map {
+                                        URLQueryItem(
+                                                name: $0.name,
+                                                value: $0.value
+                                        )
+                                }
                                 urlRequest.url = urlComponents.url
                 }
 
@@ -128,11 +133,6 @@ extension NetworkProviderImplementation {
                 using networkSession: NetworkSession
         ) async throws -> Data {
                 let urlRequest = try prepareUrlRequest(for: endpoint)
-                
-                if let cached = networkSession.cache(for: urlRequest) {
-                        return cached
-                }
-                
                 await logger?.log(request: urlRequest)
                 let (data, response) = try await networkSession.data(for: urlRequest)
                 await logger?.log(response: response, data: data)

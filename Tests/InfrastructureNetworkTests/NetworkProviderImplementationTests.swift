@@ -198,15 +198,20 @@ struct NetworkProviderImplementationTests {
                         func testQueryParameter() async {
                                 // Given
                                 let queryItemSorting: (URLQueryItem, URLQueryItem) -> Bool = { $0.name < $1.name }
-                                let queryParameters: [String: String?] = [
-                                        "string": "string",
-                                        "int": "1",
-                                        "double": "1.0",
-                                        "float": "1.0",
-                                        "parameterWithNoValue": nil,
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(name: "string", value: "string"),
+                                        QueryParameter(name: "int", value: "1"),
+                                        QueryParameter(name: "double", value: "1.0"),
+                                        QueryParameter(name: "float", value: "1.0"),
+                                        QueryParameter(name: "parameterWithNoValue", value: nil)
                                 ]
                                 let expectedQueryParameters = queryParameters
-                                        .map(URLQueryItem.init)
+                                        .map {
+                                                URLQueryItem(
+                                                        name: $0.name,
+                                                        value: $0.value
+                                                )
+                                        }
                                         .sorted(by: queryItemSorting)
                                 let spy = NetworkSessionSpy.fixture()
                                 let sut = Factory.create(with: spy)
@@ -232,8 +237,8 @@ struct NetworkProviderImplementationTests {
                         @Test("When endpoint has custom headers, request has correct headers")
                         func testHeaders() async {
                                 // Given
-                                let queryParameters: [String: String?] = [
-                                        "query": "value"
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(name: "query", value: "value")
                                 ]
                                 let expectedHeaders = StubEndpoint.queryParametersEndpoint(queryParameters).headers
                                 let spy = NetworkSessionSpy.fixture()
@@ -254,8 +259,8 @@ struct NetworkProviderImplementationTests {
                         @Test("When endpoint has custom path, request has correct path")
                         func testCustomPath() async {
                                 // Given
-                                let queryParameters: [String: String?] = [
-                                        "key": "value"
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(name: "key", value: "value")
                                 ]
                                 let endpoint = StubEndpoint.queryParametersEndpoint(queryParameters)
                                 let spy = NetworkSessionSpy.fixture()
@@ -519,15 +524,20 @@ struct NetworkProviderImplementationTests {
                         func testQueryParameter() async {
                                 // Given
                                 let queryItemSorting: (URLQueryItem, URLQueryItem) -> Bool = { $0.name < $1.name }
-                                let queryParameters: [String: String?] = [
-                                        "string": "string",
-                                        "int": "1",
-                                        "double": "1.0",
-                                        "float": "1.0",
-                                        "parameterWithNoValue": nil,
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(name: "string", value: "string"),
+                                        QueryParameter(name: "int", value: "1"),
+                                        QueryParameter(name: "double", value: "1.0"),
+                                        QueryParameter(name: "float", value: "1.0"),
+                                        QueryParameter(name: "parameterWithNoValue", value: nil)
                                 ]
                                 let expectedQueryParameters = queryParameters
-                                        .map(URLQueryItem.init)
+                                        .map {
+                                                URLQueryItem(
+                                                        name: $0.name,
+                                                        value: $0.value
+                                                )
+                                        }
                                         .sorted(by: queryItemSorting)
                                 let spy = NetworkSessionSpy.fixture()
                                 let sut = Factory.create(with: spy)
@@ -553,8 +563,11 @@ struct NetworkProviderImplementationTests {
                         @Test("When endpoint has custom headers, request has correct headers")
                         func testHeaders() async {
                                 // Given
-                                let queryParameters: [String: String?] = [
-                                        "query": "value"
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(
+                                                name: "query",
+                                                value: "value"
+                                        )
                                 ]
                                 let expectedHeaders = StubEndpoint.queryParametersEndpoint(queryParameters).headers
                                 let spy = NetworkSessionSpy.fixture()
@@ -575,8 +588,11 @@ struct NetworkProviderImplementationTests {
                         @Test("When endpoint has custom path, request has correct path")
                         func testCustomPath() async {
                                 // Given
-                                let queryParameters: [String: String?] = [
-                                        "key": "value"
+                                let queryParameters: [QueryParameter] = [
+                                        QueryParameter(
+                                                name: "key",
+                                                value: "value"
+                                        )
                                 ]
                                 let endpoint = StubEndpoint.queryParametersEndpoint(queryParameters)
                                 let spy = NetworkSessionSpy.fixture()

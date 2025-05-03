@@ -4,7 +4,7 @@ enum StubEndpoint: Endpoint {
         case invalidURLEndpoint
         case getEndpoint
         case postEndpoint
-        case queryParametersEndpoint([String: String?])
+        case queryParametersEndpoint([QueryParameter])
         case encodableBodyEndpoint(StubRequest)
 
         var baseURL: String {
@@ -45,7 +45,7 @@ enum StubEndpoint: Endpoint {
                                 .plain
 
                         case .queryParametersEndpoint(let parameters):
-                                .queryParameter(parameters)
+                                .queryParameters(parameters)
 
                         case .encodableBodyEndpoint(let encodableBody):
                                 .encodable(encodableBody)
