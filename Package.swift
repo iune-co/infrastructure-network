@@ -14,7 +14,7 @@ struct InfrastructureNetworkPackage {
 
 let package = Package(
         name: InfrastructureNetworkPackage.name,
-        platforms: [.iOS(.v17)],
+        platforms: [.iOS(.v18)],
         products: [
                 .library(
                         name: InfrastructureNetworkPackage.name,

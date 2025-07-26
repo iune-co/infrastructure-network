@@ -1,7 +1,7 @@
 import Foundation
 
 public struct NetworkProviderFactory {
-        public static func createDefault<Path: Endpoint>() -> some NetworkProvider<Path> {
+        public static func createDefault<Path: Endpoint>(withCachePolicy policy: NSURLRequest.CachePolicy = .returnCacheDataElseLoad) -> some NetworkProvider<Path> {
                 let cache = URLCache(
                         memoryCapacity: 50 * 1024 * 1024,
                         diskCapacity: 200 * 1024 * 1024,
@@ -9,17 +9,7 @@ public struct NetworkProviderFactory {
                 )
                 let config = URLSessionConfiguration.default
                 config.urlCache = cache
-                config.requestCachePolicy = .returnCacheDataElseLoad
-                return NetworkProviderImplementation(
-                        logger: NetworkLoggerImplementation(),
-                        networkSession: URLSession(configuration: config)
-                )
-        }
-        
-        public static func createDefault<Path: Endpoint>(with cache: URLCache) -> some NetworkProvider<Path> {
-                let config = URLSessionConfiguration.default
-                config.urlCache = cache
-                config.requestCachePolicy = .returnCacheDataElseLoad
+                config.requestCachePolicy = policy
                 return NetworkProviderImplementation(
                         logger: NetworkLoggerImplementation(),
                         networkSession: URLSession(configuration: config)

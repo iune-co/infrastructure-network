@@ -4,11 +4,11 @@ public struct HTTPHeader {
         }
 
         public struct Key {
-                static let contentType = "Content-Type"
-                static let authorization = "Authorization"
+                public static let contentType = "Content-Type"
+                public static let authorization = "Authorization"
         }
 
         public struct Value {
-                static let applicationJSON = "application/json"
+                public static let applicationJSON = "application/json"
         }
 }
